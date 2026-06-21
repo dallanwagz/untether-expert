@@ -33,7 +33,7 @@ wifi:
 
 # The bridge component (Classic-SPP <-> TCP), from the untether monorepo.
 external_components:
-  - source: github://dallanwagz/untether@main
+  - source: github://dallanwagz/untether@untether_spp-v1.0.0   # pinned release; @main tracks unstable
     components: [untether_spp]
     refresh: 0s
 
