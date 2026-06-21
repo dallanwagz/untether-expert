@@ -1,0 +1,48 @@
+# Radio mode: CLASSIC PROBE (per-device reachability + SDP channel discovery)
+# Flash this to test whether a Bluetooth-Classic device is reachable from the ESP32 (which sits right
+# next to it) and to discover its RFCOMM/SPP channel. This is the "is the radio alive and what channel
+# is SPP on" probe — exactly what you use to tell a dying radio from a contested bond:
+#   * logs "SDP found SPP on channel N"  -> device reachable, use channel N in spp-bridge.yaml
+#   * logs "SDP discovery failed" / connect timeouts repeatedly -> not reachable (off / out of range /
+#     held by another host / failing radio — cross-check with l2ping from a Linux host)
+#
+#   esphome run classic-inquiry.yaml
+#   esphome logs classic-inquiry.yaml      # or read via aioesphomeapi :6053
+#
+# REQUIRES a classic ESP32 (WROOM-32).
+#
+# NOTE ON SCOPE: this probes a KNOWN BD_ADDR (the common case — you have the MAC, you need its channel
+# and reachability). Full inquiry that *discovers unknown* nearby Classic devices needs an
+# inquiry-capable component (esp_bt_gap_start_discovery); that's a roadmap addition to untether_spp.
+# Until then, enumerate unknown devices from a phone's BT cache or a Linux host's `hcitool scan`.
+
+esphome:
+  name: untether-classic-probe
+  friendly_name: untether Classic probe
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+logger:
+  level: INFO
+api:
+ota:
+  - platform: esphome
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+external_components:
+  - source: github://dallanwagz/untether@main
+    components: [untether_spp]
+    refresh: 0s
+
+# channel: 0 forces SDP discovery on each (re)connect attempt — the logs then report whether the
+# device answered and on what channel. tcp_port is required by the component but unused for probing.
+untether_spp:
+  mac_address: AA:BB:CC:DD:EE:FF   # <-- the BD_ADDR you want to probe
+  channel: 0
+  tcp_port: 8888

@@ -1,0 +1,19 @@
+{
+  "name": "untether",
+  "owner": { "name": "dallanwagz" },
+  "description": "The untether Bluetooth toolkit — a clone-and-go Bluetooth expert persona for Claude Code.",
+  "plugins": [
+    {
+      "name": "untether-expert",
+      "source": "./",
+      "displayName": "untether — Bluetooth expert",
+      "description": "A Bluetooth SME persona with the untether-bt library, an ESP32 it can flash into different radio modes, Home Assistant via MCP, and spec-grounded protocol knowledge.",
+      "version": "0.1.0",
+      "author": { "name": "dallanwagz" },
+      "homepage": "https://github.com/dallanwagz/untether-expert",
+      "repository": "https://github.com/dallanwagz/untether-expert",
+      "license": "MIT",
+      "keywords": ["bluetooth", "ble", "rfcomm", "spp", "reverse-engineering", "home-assistant", "esp32"]
+    }
+  ]
+}

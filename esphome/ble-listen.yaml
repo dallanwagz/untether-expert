@@ -1,0 +1,60 @@
+# Radio mode: BLE LISTEN (passive scanner / ground-truth probe)
+# Flash this to passively capture raw BLE advertisements and log the manufacturer/service-data bytes
+# for target devices. This is untether's "what does the radio ACTUALLY see" probe for the parser-diff
+# loop: decode these raw bytes yourself with untether_bt and compare to what Home Assistant parsed.
+#
+#   esphome run ble-listen.yaml
+#   # then watch raw adverts:  esphome logs ble-listen.yaml   (or read via aioesphomeapi :6053)
+#
+# Works on ANY ESP32 (BLE is universal). For the parser diff you usually want this on a chip NEAR the
+# device, ideally the same vantage point as your HA proxy.
+
+esphome:
+  name: untether-ble-listen
+  friendly_name: untether BLE listen
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+logger:
+  level: DEBUG          # we want the raw advert dumps
+api:
+ota:
+  - platform: esphome
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+esp32_ble_tracker:
+  scan_parameters:
+    active: false       # passive: capture adverts exactly as broadcast, don't probe/scan-request
+    interval: 320ms
+    window: 300ms
+  on_ble_advertise:
+    # Log every advert's address + raw manufacturer & service data. untether decodes these and diffs
+    # them against HA's parsed entity values to localize parser bugs (offset/scale/matcher).
+    then:
+      - lambda: |-
+          for (auto md : x.get_manufacturer_datas()) {
+            std::string hex;
+            char b[4];
+            for (auto v : md.data) { sprintf(b, "%02x", v); hex += b; }
+            ESP_LOGD("untether", "ADV %s RSSI %d MFR uuid=%s data=%s",
+                     x.address_str().c_str(), x.get_rssi(),
+                     md.uuid.to_string().c_str(), hex.c_str());
+          }
+          for (auto sd : x.get_service_datas()) {
+            std::string hex;
+            char b[4];
+            for (auto v : sd.data) { sprintf(b, "%02x", v); hex += b; }
+            ESP_LOGD("untether", "ADV %s RSSI %d SVC uuid=%s data=%s",
+                     x.address_str().c_str(), x.get_rssi(),
+                     sd.uuid.to_string().c_str(), hex.c_str());
+          }
+
+# Tip: to focus on one device, filter by x.address_str() == "aa:bb:cc:dd:ee:ff" in the lambda above,
+# or just grep the logs for the MAC. Feed the hex into:
+#   from untether_bt import parse_ad, manufacturer_data, company_name

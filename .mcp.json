@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "home-assistant": {
+      "type": "sse",
+      "url": "${user_config.ha_mcp_url}",
+      "headers": {
+        "Authorization": "Bearer ${user_config.ha_token}"
+      }
+    }
+  }
+}

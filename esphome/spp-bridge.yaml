@@ -1,0 +1,70 @@
+# Radio mode: SPP BRIDGE
+# Flash this to RFCOMM-connect to one or more Bluetooth-Classic SPP devices and re-expose each as a
+# TCP server. This is how untether *talks to* Classic devices the BLE-only world can't reach.
+#
+#   pip install esphome
+#   cp secrets.yaml.example secrets.yaml   # set wifi_ssid / wifi_password
+#   esphome run spp-bridge.yaml            # USB the first time, OTA after
+#
+# Then from the host:  nc <esp32-ip> 8888   (or untether_bt.SppConnection(host, 8888))
+# Read the bridge's own logs/state over the network with aioesphomeapi on port 6053.
+#
+# REQUIRES a classic ESP32 (WROOM-32). S3/C3/C6/H2 are BLE-only and cannot do Classic SPP.
+# A Wyze plug (ESP32-based) is ideal: it adds relays you can use to power-cycle stuck devices.
+
+esphome:
+  name: untether-spp-bridge
+  friendly_name: untether SPP bridge
+
+esp32:
+  board: esp32dev          # generic WROOM-32
+  framework:
+    type: esp-idf          # untether_spp forces BR/EDR-only Classic BT + disables BLE
+
+logger:
+  level: INFO              # Classic BT + verbose logs is RAM-heavy on a plain ESP32
+api:                       # read state/logs via aioesphomeapi (port 6053)
+ota:
+  - platform: esphome
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+# The bridge component (Classic-SPP <-> TCP), from the untether monorepo.
+external_components:
+  - source: github://dallanwagz/untether@main
+    components: [untether_spp]
+    refresh: 0s
+
+# ---- ONE device ----
+untether_spp:
+  mac_address: AA:BB:CC:DD:EE:FF   # <-- the device's BD_ADDR (control endpoint, not its A2DP audio)
+  channel: 0                       # 0 = SDP-discover the RFCOMM channel; or set a known channel
+  tcp_port: 8888
+  # For a Pixoo/NewMode device, auto-fire the 0xAF handshake on connect:
+  #   on_open_hex: "01 04 00 af 01 b4 00 02"
+
+# ---- MULTIPLE devices (one ESP32, one shared radio, each on its own TCP port) ----
+# Replace the single block above with a list. The controller defaults to 2 BR/EDR ACL links, so set
+# the max to your device count or device #3+ fails with PORT_StartCnf result:9.
+#
+# untether_spp:
+#   max_acl: 4
+#   devices:
+#     - { mac_address: AA:BB:CC:00:00:01, channel: 2, tcp_port: 8888 }   # e.g. a Pixoo (NewMode)
+#     - { mac_address: AA:BB:CC:00:00:02, channel: 2, tcp_port: 8889 }   # another Pixoo
+#     - { mac_address: AA:BB:CC:00:00:03, channel: 4, tcp_port: 8890 }   # e.g. a byte-stuffed device
+#     - { mac_address: AA:BB:CC:00:00:04, channel: 0, tcp_port: 8891 }   # 0 = SDP-discover the channel
+#
+# Operating notes (hard-won):
+#  * Single bond per device — keep the vendor app / phone / any other controller OFF a box this holds.
+#  * Pace your writes; an unbounded flood congests the one shared radio. untether_bt.SppConnection
+#    drains continuously + paces, which is exactly right (esp. for always-streaming devices).
+#  * After congestion or orphaned links, a COLD power-cycle recovers it — a soft restart does not.
+
+# A Wyze plug exposes its relays here too — handy to power-cycle a wedged device:
+# switch:
+#   - platform: gpio
+#     name: "Outlet"
+#     pin: GPIOxx

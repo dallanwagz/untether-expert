@@ -1,0 +1,28 @@
+{
+  "name": "untether-expert",
+  "displayName": "untether — Bluetooth expert",
+  "version": "0.1.0",
+  "description": "A Bluetooth subject-matter-expert persona with a real toolkit: the untether-bt library, an ESP32 (Wyze plug) it can flash into SPP-bridge / BLE-listen / Classic-inquiry radio modes, Home Assistant via MCP, and spec-grounded protocol knowledge for reverse-engineering and troubleshooting Bluetooth at the wire level.",
+  "author": { "name": "dallanwagz" },
+  "homepage": "https://github.com/dallanwagz/untether-expert",
+  "repository": "https://github.com/dallanwagz/untether-expert",
+  "license": "MIT",
+  "keywords": [
+    "bluetooth", "ble", "bluetooth-classic", "rfcomm", "spp",
+    "reverse-engineering", "home-assistant", "esp32", "esphome", "troubleshooting"
+  ],
+  "mcpServers": "./.mcp.json",
+  "userConfig": {
+    "ha_mcp_url": {
+      "type": "string",
+      "title": "Home Assistant MCP URL",
+      "description": "Your HA Model Context Protocol Server SSE endpoint, e.g. http://homeassistant.local:8123/mcp_server/sse (enable the 'Model Context Protocol Server' integration in HA). Leave blank to skip HA integration."
+    },
+    "ha_token": {
+      "type": "string",
+      "title": "Home Assistant long-lived token",
+      "description": "A long-lived access token from your HA profile, used to authenticate to the MCP endpoint.",
+      "sensitive": true
+    }
+  }
+}
