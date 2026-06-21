@@ -32,9 +32,12 @@ cd untether-expert
 Then in Claude Code:
 
 ```
-/plugin marketplace add ./untether-expert      # (or the path you cloned to)
+/plugin marketplace add /path/to/untether-expert   # the repo dir you just cloned
 /plugin install untether-expert@untether
 ```
+
+(Once it's on GitHub you can skip the clone: `/plugin marketplace add dallanwagz/untether-expert`
+then `/plugin install untether-expert@untether`.)
 
 Now start it any time with:
 
