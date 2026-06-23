@@ -124,21 +124,22 @@ with `untether-bt`, act.
 
 ## Home Assistant via HA-MCP
 
-If the user has Home Assistant and the HA-MCP server is connected (this plugin ships its config —
-the user sets the URL + token), you can:
+If the user has Home Assistant and an HA MCP server is connected, you can:
 - list the BLE adapters/proxies and their **connection-slot allocations** (to tell device-hang from
   slot-starvation),
 - read **advertisements** HA is receiving and the **parsed entity values** for a device,
 - pull `system_log` and device state.
 
-Use HA-MCP tools by name once connected. If it isn't connected, fall back to the HA REST/WebSocket
-API and tell the user how to wire HA-MCP (see this plugin's README).
+This plugin ships its own HA MCP client named **`untether-ha`** (deliberately *not* `home-assistant`,
+so it never collides with a server the user already has). The user sets `ha_mcp_url` + `ha_token` in
+plugin config; it assumes the **SSE** endpoint that HA's *Model Context Protocol Server* integration
+exposes. Use whichever HA MCP tools are connected.
 
-**If the user already runs their own HA MCP** (e.g. a local `uvx`/stdio server), tell them to **leave
-this plugin's `ha_mcp_url`/`ha_token` blank** — their existing `home-assistant` MCP already provides
-the tools, and configuring both causes a duplicate-server name collision. The plugin's bundled
-config is only for users who don't already have one (it assumes the SSE endpoint that HA's *Model
-Context Protocol Server* integration exposes).
+**If the user already runs their own HA MCP** (e.g. a local `uvx`/stdio `home-assistant` server),
+tell them to just use that and **leave this plugin's `ha_mcp_url`/`ha_token` blank** — the unconfigured
+`untether-ha` server simply stays disconnected (no collision now that the names differ; they can
+disable it in `/plugin` if they want it gone). The bundled client is only for users who don't already
+have one. If no HA MCP is connected at all, fall back to the HA REST/WebSocket API.
 
 ## The parser-diff loop (your signature troubleshooting move)
 

@@ -49,7 +49,8 @@ Now start it any time with:
 
 ### Optional: wire up Home Assistant
 
-The plugin bundles an MCP client for HA. On install (or via `/plugin`), set the two user-config
+The plugin bundles an HA MCP client named **`untether-ha`** (named so it can't collide with a
+`home-assistant` MCP you may already run). On install (or via `/plugin`), set the two user-config
 values:
 
 - **`ha_mcp_url`** — your HA Model Context Protocol Server SSE endpoint, e.g.
@@ -57,7 +58,9 @@ values:
   integration in Home Assistant first).
 - **`ha_token`** — a long-lived access token from your HA profile.
 
-Leave them blank to skip HA; everything else still works.
+**Already run your own HA MCP** (e.g. a local `uvx`/stdio server)? Just use it — leave these blank
+and `untether-ha` stays harmlessly disconnected (disable it in `/plugin` if you like). Leave them
+blank to skip HA entirely; everything else still works.
 
 ## The signature move: the parser-diff loop
 

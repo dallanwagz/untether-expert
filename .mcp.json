@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "home-assistant": {
+    "untether-ha": {
       "type": "sse",
       "url": "${user_config.ha_mcp_url}",
       "headers": {
