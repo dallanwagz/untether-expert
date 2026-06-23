@@ -75,9 +75,12 @@ values, and you normally can't see *inside* that step. untether can, by diffing 
    offset/scale/matcher); different bytes ⇒ a capture/proxy problem. Pinpoint the byte, propose the
    upstream fix.
 
-`scripts/decode_ble_log.py` is the radio-truth half: it decodes the `ble-listen` log into per-device
-readings (ANSI-stripped, decode-by-known-model-per-MAC) and flags SUSPECT frames (e.g. a foreign
-company id on a known MAC — the MAC-collision hypothesis). Field-tested on Govee H5074/H5075; see
+The radio-truth half ships as two scripts (shared decode in `scripts/bledecode.py`, so they can't
+drift): **`scripts/decode_ble_log.py`** decodes a piped `esphome logs` stream (one-shot), and
+**`scripts/ble_logger.py`** is a **self-reconnecting** logger for long unattended captures — it talks
+to the ESP32 over the ESPHome API, survives Wi-Fi blips/reboots, writes CSV + heartbeat, and flags
+SUSPECT frames (a foreign company id on a known MAC = the collision hypothesis). Both take
+`--self-test` to verify the decoder before a long run. Field-tested on Govee H5074/H5075; see
 `reference/devices/`.
 
 > ⚠️ **Active scanning matters.** Many sensors (Govee included) put their data in the BLE *scan
