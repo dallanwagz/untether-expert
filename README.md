@@ -72,6 +72,15 @@ values, and you normally can't see *inside* that step. untether can, by diffing 
    offset/scale/matcher); different bytes ⇒ a capture/proxy problem. Pinpoint the byte, propose the
    upstream fix.
 
+`scripts/decode_ble_log.py` is the radio-truth half: it decodes the `ble-listen` log into per-device
+readings (ANSI-stripped, decode-by-known-model-per-MAC) and flags SUSPECT frames (e.g. a foreign
+company id on a known MAC — the MAC-collision hypothesis). Field-tested on Govee H5074/H5075; see
+`reference/devices/`.
+
+> ⚠️ **Active scanning matters.** Many sensors (Govee included) put their data in the BLE *scan
+> response*, which a passive scan never solicits — you'd capture the device but zero values.
+> `esphome/ble-listen.yaml` defaults to `active: true` for this reason.
+
 ## What's inside
 
 ```

@@ -134,6 +134,12 @@ the user sets the URL + token), you can:
 Use HA-MCP tools by name once connected. If it isn't connected, fall back to the HA REST/WebSocket
 API and tell the user how to wire HA-MCP (see this plugin's README).
 
+**If the user already runs their own HA MCP** (e.g. a local `uvx`/stdio server), tell them to **leave
+this plugin's `ha_mcp_url`/`ha_token` blank** — their existing `home-assistant` MCP already provides
+the tools, and configuring both causes a duplicate-server name collision. The plugin's bundled
+config is only for users who don't already have one (it assumes the SSE endpoint that HA's *Model
+Context Protocol Server* integration exposes).
+
 ## The parser-diff loop (your signature troubleshooting move)
 
 HA (and the upstream `bluetooth-devices`/BTHome parsers) turn raw adverts into entity values, and you
@@ -167,6 +173,29 @@ This is the layer nobody else can see; making it visible is what you're for.
   range," then stop chasing power-cycles and call it.
 - **SPP control endpoints are connectable-but-not-discoverable** — they won't show in an inquiry;
   you need the MAC (from the phone's BT cache by name, an HCI snoop of a real connection, or a label).
+
+### BLE / parser-diff gotchas (field-tested)
+
+- **Scan-response payloads need ACTIVE scanning.** Many sensors (Govee H5074/H5075 among them) carry
+  their real data (temp/humidity) in the **scan response**, not the advertisement. A *passive* scan
+  never solicits it, so you capture only the **name PDU and zero values** — and it looks like it's
+  working because adverts arrive. `ble-listen.yaml` now defaults to `active: true`; if you ever see
+  "device heard but no manufacturer data," that's this — flip to active.
+- **Strip ANSI before parsing ESPHome logs.** ESPHome injects ANSI color codes into log lines, which
+  corrupt a naive `bytes.fromhex(...)` of the hex field. Strip `\x1b\[[0-9;]*m` first. The bundled
+  `${CLAUDE_PLUGIN_ROOT}/scripts/decode_ble_log.py` already does this.
+- **Decode by known-model-per-MAC, not by length/heuristics.** Different models from one vendor often
+  share a company ID and a leading byte (Govee H5074 *and* H5075 both use `0xEC88` and lead with
+  `00`) but have **different payload layouts**. Guessing the model from the bytes misclassifies them;
+  map each target MAC → its model and decode accordingly.
+- **The witness radio must NOT be a `bluetooth_proxy`.** For a parser diff, flash the ESP32 as a
+  *plain BLE listener* (`ble-listen.yaml`), not an HA Bluetooth proxy — otherwise its adverts join
+  HA's **by-MAC advert merge**, which can itself be the corruption mechanism you're hunting. Keep the
+  witness independent so "radio truth" is genuinely independent of HA.
+- **Don't clobber a plug that's in use.** Before overwriting an ESP32/Wyze-plug config, check its
+  current role (is it an active proxy? a thin `!include` of a shared template others depend on?) and
+  its **power draw / load**, and confirm with the user. Write a *standalone* replacement rather than
+  editing a shared template.
 
 ## Contribute back
 

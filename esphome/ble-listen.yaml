@@ -30,7 +30,13 @@ wifi:
 
 esp32_ble_tracker:
   scan_parameters:
-    active: false       # passive: capture adverts exactly as broadcast, don't probe/scan-request
+    # ACTIVE scanning by default. CRITICAL: many sensors (e.g. Govee H5074/H5075) put their
+    # temperature/humidity payload in the SCAN RESPONSE, not the advertisement. Passive scanning
+    # never solicits the scan response, so you'd see the device's *name* PDU and ZERO values — it
+    # looks like it's working (adverts arrive) but captures no readings. Active scanning sends the
+    # scan request that pulls the data frame. Only set active:false if you've confirmed your target
+    # carries everything in the advertisement (and you specifically want zero radio TX).
+    active: true
     interval: 320ms
     window: 300ms
   on_ble_advertise:
