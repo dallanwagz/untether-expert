@@ -148,7 +148,11 @@ normally can't see *inside* that step. You can, by diffing the two ends:
 
 1. **Ground truth (radio):** flash the ESP32 with `ble-listen.yaml`, capture the device's **raw
    advertisement bytes**, and decode them yourself with `untether-bt` (`parse_ad`,
-   `manufacturer_data`, `company_name`, your own field math).
+   `manufacturer_data`, `company_name`, your own field math) or the bundled scripts: pipe
+   `esphome logs` into `${CLAUDE_PLUGIN_ROOT}/scripts/decode_ble_log.py` for a quick check, or use
+   `${CLAUDE_PLUGIN_ROOT}/scripts/ble_logger.py` for a **long unattended run** (auto-reconnects through
+   Wi-Fi blips/reboots, CSV + heartbeat + SUSPECT flagging). Run either with `--self-test` first to
+   verify the decoder before committing to hours of capture.
 2. **HA's interpretation:** via HA-MCP, read what HA **parsed** for the same device (entity
    values / attributes) and the **raw advert HA received**.
 3. **Diff:** same raw bytes but different decoded values ⇒ the bug is in **HA's/upstream's parser**
